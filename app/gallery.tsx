@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Avatar from "boring-avatars";
 import {
   FaRegCircleXmark,
@@ -19,6 +19,8 @@ export type GalleryProps = {
 };
 const Gallery = ({ users }: GalleryProps) => {
   const [usersList, setUsersList] = useState(users);
+  const [sortDirection, setSortDirection] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -36,11 +38,48 @@ const Gallery = ({ users }: GalleryProps) => {
     setIsModalOpen(false);
   };
 
+  useEffect(() => {
+    if (sortBy || sortDirection) handlSortList();
+  }, [sortBy, sortDirection]);
+
+  const handlSortList = () => {
+    let newList = [...usersList];
+    newList.sort((a, b) => {
+      let valueA, valueB;
+
+      switch (sortBy) {
+        case "name":
+          valueA = a.name.toLowerCase();
+          valueB = b.name.toLowerCase();
+          break;
+        case "company":
+          valueA = a.company.name.toLowerCase();
+          valueB = b.company.name.toLowerCase();
+          break;
+        case "email":
+          valueA = a.email.toLowerCase();
+          valueB = b.email.toLowerCase();
+          break;
+        default:
+          // Default to sorting by name if sortBy doesn't match any expected value
+          valueA = a.name.toLowerCase();
+          valueB = b.name.toLowerCase();
+      }
+
+      const compare = valueA.localeCompare(valueB);
+      return sortDirection === "descending" ? -compare : compare;
+    });
+    setUsersList(newList);
+  };
+
   return (
     <div className="user-gallery">
       <div className="heading">
         <h1 className="title">Users</h1>
-        <Controls />
+        <Controls
+          onChangeSortBy={(value) => setSortBy(value)}
+          onChangeSortDirection={(value) => setSortDirection(value)}
+        />
       </div>
       <div className="items">
         {usersList.map((user, index) => (
